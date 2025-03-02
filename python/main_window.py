@@ -9,7 +9,7 @@ from psf_generator import PSFGenerator
 from drawing_widget import DrawingWidget
 from image_loader import ImageLoader
 from convolution_handler import ConvolutionHandler
-from worker import ConvolutionWorker
+from Convolution_Worker import ConvolutionWorker
 
 
 class MainWindow(QMainWindow):
@@ -305,7 +305,7 @@ class MainWindow(QMainWindow):
         # 更新绘图
         self.figure.clear()
         ax = self.figure.add_subplot(111)
-        ax.imshow(result, cmap='gray')
+        ax.imshow(result, cmap='hot', vmin=0, vmax=1)
         self.canvas.draw()
 
 
