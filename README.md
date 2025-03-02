@@ -7,9 +7,9 @@ A small tool for present imaging analog with point spread function (PSF).
 TBD
 ___
 ## To do lists
--[ ] 添加iSCAT相关的PSF功能
--[ ] 实现PSF与物体的三维计算与成像
--[ ] PSF图像三维显示
+-[ ] 添加iSCAT相关的PSF功能  
+-[ ] 实现PSF与物体的三维计算与成像  
+-[ ] PSF图像三维显示  
 ___
 ## Preferences
 [1] Küppers M, Vahid S, et al. Nat. Commun. 14, 1962 (2023).   

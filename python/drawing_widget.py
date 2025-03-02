@@ -50,7 +50,17 @@ class DrawingWidget(QWidget):
             for x in range(w):
                 color = QColor(self.image.pixel(x, y))
                 arr[y, x] = 0.0 if color == Qt.black else 1.0
-        return arr
+
+        # 三维数组生成
+        if self.is_3d_enabled:
+            # 创建三维数组
+            depth = self.z_thickness
+            # 沿第三轴复制二维图像
+            return np.stack([arr] * depth, axis=2)
+        else:
+            return arr
+
+
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
