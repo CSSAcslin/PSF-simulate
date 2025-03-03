@@ -60,6 +60,9 @@ class MainWindow(QMainWindow):
         self.slider.setValue(32)
         result_panel.addWidget(self.slider)
         self.slider.setEnabled(False)
+        self.z_slider.valueChanged.connect(self._update_z_layer)  # 连接滑块到参数更新
+        self.z_slider.valueChanged.connect(self.image_processor.on_z_changed)  # 连接滑块到图像处理
+        self.slider.setRange(0, self.psf_z - 1)
 
         # 控制按钮
         self.apply_btn = QPushButton("应用PSF运算")
@@ -425,7 +428,8 @@ class MainWindow(QMainWindow):
         result = ConvolutionHandler.convolve(
             self.input_image,
             self.current_psf,
-            scale_factor=self.scale_factor
+            scale_factor=self.scale_factor,
+            z_index = self._update_z_layer
         )
         # 根据输入维度调整处理逻辑
         if self.input_image.ndim == 3:
