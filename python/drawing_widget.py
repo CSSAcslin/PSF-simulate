@@ -12,6 +12,10 @@ class DrawingWidget(QWidget):
         self.setFixedSize(size, size)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
+        # 维度参数
+        self._3d_enabled = False
+        self._z_depth = 1
+
         # 初始化画布（白底黑笔）
         self.image = QImage(QSize(size, size), QImage.Format_RGB32)
         self.image.fill(Qt.white)
@@ -40,21 +44,26 @@ class DrawingWidget(QWidget):
         self.current_tool = tool_name
         self.update()
 
+    def set_3d_params(self, is_3d, z_depth):
+        # """接收来自MainWindow的三维参数"""
+        self._3d_enabled = is_3d
+        self._z_depth = z_depth
+
     def getImageArray(self):
         # """将QImage转换为numpy数组（HxW）"""
         h, w = self.image.height(), self.image.width()
         arr = np.zeros((h, w), dtype=np.float32)
 
-        # 将QImage转换为灰度数组（0为黑，1为白）
+        # 将QImage转换为灰度数组（1为黑，0为白）
         for y in range(h):
             for x in range(w):
                 color = QColor(self.image.pixel(x, y))
-                arr[y, x] = 0.0 if color == Qt.black else 1.0
+                arr[y, x] = 1.0 if color == Qt.black else 0.0
 
         # 三维数组生成
-        if self.is_3d_enabled:
+        if self._3d_enabled:
             # 创建三维数组
-            depth = self.z_thickness
+            depth = self._z_depth
             # 沿第三轴复制二维图像
             return np.stack([arr] * depth, axis=2)
         else:

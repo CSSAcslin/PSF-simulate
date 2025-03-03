@@ -112,9 +112,10 @@ class PSFViewer(QMainWindow):
                        cmap='viridis',
                        vmin=self.vmin,
                        vmax=self.vmax,
-                       extent=[-self.params['dx'] * 64, self.params['dx'] * 64,
-                               -self.params['dy'] * 64, self.params['dy'] * 64],
-                       origin='lower')
+                       # extent=[-self.params['dx'] * 64, self.params['dx'] * 64,
+                       #         -self.params['dy'] * 64, self.params['dy'] * 64],
+                       # origin='lower'
+                       )
 
         # 添加标注
         ax.set_title(f"{self.mode.capitalize()} PSF (z={z_index})")

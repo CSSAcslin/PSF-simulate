@@ -1,9 +1,12 @@
 import sys
+
+import matplotlib.font_manager
 import numpy as np
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from psf_generator import PSFGenerator
 from drawing_widget import DrawingWidget
@@ -45,7 +48,7 @@ class MainWindow(QMainWindow):
         result_panel = QVBoxLayout(right_container)
 
 
-        self.figure = Figure(figsize=(8, 6))
+        self.figure = plt.figure(figsize=(8, 6))
         self.canvas = FigureCanvas(self.figure)
         result_panel.addWidget(self.canvas)
 
@@ -56,6 +59,7 @@ class MainWindow(QMainWindow):
         self.slider.setTickInterval(5)
         self.slider.setValue(32)
         result_panel.addWidget(self.slider)
+        self.slider.setEnabled(False)
 
         # 控制按钮
         self.apply_btn = QPushButton("应用PSF运算")
@@ -194,6 +198,8 @@ class MainWindow(QMainWindow):
 
         # 连接复选框状态变化信号
         self.dim_checkbox.stateChanged.connect(self.toggle_3d_options)
+        self.dim_checkbox.stateChanged.connect(self.update_drawing_3d_params) #3d信号
+        self.z_depth_input.valueChanged.connect(self.update_drawing_3d_params)
 
         dimension_layout.addWidget(self.dim_checkbox)
         dimension_layout.addWidget(self.z_depth_label)
@@ -238,15 +244,6 @@ class MainWindow(QMainWindow):
         self.z_depth_input.setVisible(is_3d)
         self.z_depth_input.setEnabled(is_3d)
 
-    # 以下两个是控制3D显示的
-    @property
-    def is_3d_enabled(self):
-        return self.dim_checkbox.isChecked()
-
-    @property
-    def z_thickness(self):
-        return self.z_depth_input.value()
-
     # 选项卡 图片上传
     def setupImageTab(self, tab_widget):
         image_tab = QWidget()
@@ -283,23 +280,23 @@ class MainWindow(QMainWindow):
 
         if psf_type == "Bessel 衍射":
             self.current_psf = PSFGenerator.generate_bessel(
-                size=size_xy,
+                size = size_xy,
                 size_z = size_z,
                 size_dxdy =size_dxdy,
                 size_dz = size_dz,
                 amplitude = amplitude,
-                wavelength=float(self.wavelength.text()),
+                wavelength = float(self.wavelength.text()),
                 n_bessel = float(self.n_bessel.text()),
                 phase_shift = float(self.phase_shift.text())
             )
         elif psf_type == "Gaussian 衍射":
             self.current_psf = PSFGenerator.generate_gaussian(
-                size=size_xy,
-                size_z=size_z,
-                size_dxdy=size_dxdy,
-                size_dz=size_dz,
-                amplitude=amplitude,
-                wavelength=float(self.wavelength.text()),
+                size = size_xy,
+                size_z = size_z,
+                size_dxdy = size_dxdy,
+                size_dz = size_dz,
+                amplitude = amplitude,
+                wavelength = float(self.wavelength.text()),
             )
         elif psf_type == "艾里斑":
             self.current_psf = PSFGenerator.generate_airy(
@@ -395,15 +392,29 @@ class MainWindow(QMainWindow):
         self.scale_factor = float(self.scale_input.text())
         self.updateResult()
 
+    def get_drawing_3d_params(self):
+        # """返回绘图相关的三维参数"""
+        return {
+            'is_3d': self.dim_checkbox.isChecked(),
+            'z_depth': self.z_depth_input.value()
+        }
+
+    def update_drawing_3d_params(self):
+        # """当参数变化时更新绘图控件"""
+        params = self.get_drawing_3d_params()
+        self.drawing_widget.set_3d_params(params['is_3d'], params['z_depth'])
+        self.image_loader.set_3d_params(params['is_3d'], params['z_depth'])
+
     def enable_3d_visualization(self, depth):
         # """激活三维可视化组件"""
-        self.z_slider.setRange(0, depth - 1)
-        self.z_slider.setEnabled(True)
-        self.current_z_layer = 0
+        self.slider.setRange(0, depth - 1)
+        self.slider.setEnabled(True)
+        self.current_z_layer = depth / 2
+        self.slider.setValue(self.current_z_layer)
 
     def disable_3d_visualization(self):
         # """禁用三维可视化组件"""
-        self.z_slider.setEnabled(False)
+        self.slider.setEnabled(False)
         self.current_z_layer = None
 
     def updateResult(self):
@@ -429,9 +440,20 @@ class MainWindow(QMainWindow):
             self.disable_3d_visualization()
 
         # 更新绘图
+        font1 = matplotlib.font_manager.FontProperties(fname= r"C:\Windows\Fonts\msyh.ttc")
+
         self.figure.clear()
         ax = self.figure.add_subplot(111)
-        ax.imshow(result, cmap='hot', vmin=0, vmax=1)
+        image = ax.imshow(result,
+                  cmap='viridis',
+                  vmin=0,
+                  vmax=1,
+                  )
+        ax_cb = inset_axes(ax, width="3%", height="100%", loc='lower left', bbox_to_anchor=(1.02, 0., 1, 1),bbox_transform=ax.transAxes, borderpad=0)
+        self.figure.colorbar(image, ax=ax, cax=ax_cb, label = 'Intensity')
+        ax.set_title(f"{self.psf_type.currentText()} PSF (z={self.current_z_layer})",fontproperties=font1)
+        ax.set_xlabel("X position (μm)")
+        ax.set_ylabel("Y position (μm)")
         self.canvas.draw()
 
 

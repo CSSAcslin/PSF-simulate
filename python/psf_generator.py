@@ -15,7 +15,8 @@ class PSFGenerator:
     def generate_bessel(size=128,size_z=64,size_dxdy = 0.1e-6,size_dz=0.05e-6,amplitude = 1,wavelength=500e-9,
                         n_bessel = 0,phase_shift = 90.0):
         # 贝塞尔干涉模式
-        x,y = (np.arange(size) - size // 2) * size_dxdy
+        x = (np.arange(size) - size // 2) * size_dxdy
+        y = (np.arange(size) - size // 2) * size_dxdy
         z = (np.arange(size_z) - size_z // 2) * size_dz
         X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
         r_xy = np.sqrt(X ** 2 + Y ** 2)  # 横向径向距离
