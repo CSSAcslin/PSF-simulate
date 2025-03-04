@@ -53,7 +53,7 @@ class PSFViewer(QMainWindow):
         self.params = {
             'nx': 128, 'ny': 128, 'nz': 64,
             'dx': 0.1e-6, 'dy': 0.1e-6, 'dz': 0.05e-6,
-            'n_bessel': 0, 'amplitude': 1.0,
+            'n_bessel': 1, 'amplitude': 1.0,
             'wavelength': 633e-9, 'phase_shift': np.pi / 4
         }
         self.mode = 'bessel'
