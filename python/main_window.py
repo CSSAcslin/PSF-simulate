@@ -30,7 +30,7 @@ class MainWindow(QMainWindow):
     def initUI(self):
         self.setWindowTitle("光学成像模拟器 v1.2")
         self.setGeometry(100, 100, 1200, 800)
-
+        self.current_z_layer = 32
         # 主布局
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
@@ -57,12 +57,12 @@ class MainWindow(QMainWindow):
         # Z轴滑动条
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setTickInterval(5)
-        self.slider.setValue(32)
+        self.slider.setValue(self.current_z_layer)
         result_panel.addWidget(self.slider)
         self.slider.setEnabled(False)
-        self.z_slider.valueChanged.connect(self._update_z_layer)  # 连接滑块到参数更新
-        self.z_slider.valueChanged.connect(self.image_processor.on_z_changed)  # 连接滑块到图像处理
-        self.slider.setRange(0, self.psf_z - 1)
+        self.slider.valueChanged.connect(self._update_z_layer)  # 连接滑块到参数更新
+        # self.z_slider.valueChanged.connect(self.image_processor.on_z_changed)  # 连接滑块到图像处理
+        self.slider.setRange(0, int(self.psf_z.text()) - 1)
 
         # 控制按钮
         self.apply_btn = QPushButton("应用PSF运算")
@@ -74,6 +74,9 @@ class MainWindow(QMainWindow):
 
         main_layout.addWidget(control_panel, 1)
         main_layout.addWidget(right_container, 1)
+
+        self.delay_update_timer = QTimer()
+        self.delay_update_timer.setSingleShot(True)
 
     # 选项卡 PSF设置
     def setupPSFTab(self, tab_widget):
@@ -263,7 +266,8 @@ class MainWindow(QMainWindow):
 
     def initConnections(self):
         self.generate_psf_btn.clicked.connect(self.generatePSF)
-        self.drawing_widget.imageUpdated.connect(self.handleDrawingUpdate)
+        self.delay_update_timer.timeout.connect(self.handleDrawingUpdate)
+        self.drawing_widget.imageUpdated.connect(self.handleDrawingUpdate_Delay)
         self.image_loader.imageLoaded.connect(self.handleImageLoad)
         self.psf_type.currentIndexChanged.connect(self.updateParamVisibility)
         self.apply_btn.clicked.connect(self.startConvolution)
@@ -386,8 +390,13 @@ class MainWindow(QMainWindow):
         self.progress_dialog.close()
         QMessageBox.critical(self, "错误", message)
 
-    def handleDrawingUpdate(self, image):
+    # 延时更新（v0.2.3 目前绘图会立马更新（包括之前版本））当前只针对z轴做了延迟更新
+    def handleDrawingUpdate_Delay(self, image):
         self.input_image = image
+        self.delay_update_timer.start(300)
+
+    def handleDrawingUpdate(self):
+        # self.input_image = image
         self.updateResult()
 
     def handleImageLoad(self, image):
@@ -408,38 +417,45 @@ class MainWindow(QMainWindow):
         self.drawing_widget.set_3d_params(params['is_3d'], params['z_depth'])
         self.image_loader.set_3d_params(params['is_3d'], params['z_depth'])
 
+    def _update_z_layer(self, value):
+        # """更新当前显示的Z层索引"""
+        self.current_z_layer = value
+
     def enable_3d_visualization(self, depth):
         # """激活三维可视化组件"""
         self.slider.setRange(0, depth - 1)
         self.slider.setEnabled(True)
-        self.current_z_layer = depth / 2
+        self.current_z_layer = depth // 2
         self.slider.setValue(self.current_z_layer)
 
     def disable_3d_visualization(self):
         # """禁用三维可视化组件"""
+        self.current_z_layer = 32
         self.slider.setEnabled(False)
-        self.current_z_layer = None
+
 
     def updateResult(self):
         if self.input_image is None or self.current_psf is None:
             return
 
-        # 执行卷积
-        result = ConvolutionHandler.convolve(
-            self.input_image,
-            self.current_psf,
-            scale_factor=self.scale_factor,
-            z_index = self._update_z_layer
-        )
-        # 根据输入维度调整处理逻辑
+        # 执行卷积，并根据输入维度调整处理逻辑
         if self.input_image.ndim == 3:
             # 处理三维输入的逻辑
+            result = ConvolutionHandler.convolve(
+                self.input_image,
+                self.current_psf,
+                scale_factor=self.scale_factor,
+                z_index=self.current_z_layer
+            )
 
-
-            self.enable_3d_visualization(self.input_image.shape[2])
+            self.enable_3d_visualization(int(self.psf_z.text()))
         else:
             # 原有二维处理逻辑
-
+            result = ConvolutionHandler.convolve(
+                self.input_image,
+                self.current_psf,
+                scale_factor=self.scale_factor,
+            )
 
             self.disable_3d_visualization()
 

@@ -6,8 +6,8 @@ class ConvolutionHandler:
     @staticmethod
     def convolve(image, psf, scale_factor=1.0, z_index=None, progress_callback=None):
         # 验证输入
-        if image.ndim != 2:
-            raise ValueError("输入图像必须是二维灰度图")
+        # if image.ndim != 2:
+        #     raise ValueError("输入图像必须是二维灰度图")
         if psf.ndim not in [2, 3]:
             raise ValueError("PSF必须是二维或三维数组")
         if psf.ndim == 3 and z_index is None:

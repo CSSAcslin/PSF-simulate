@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QObject, pyqtSignal
 import numpy as np
-
+from convolution_handler import ConvolutionHandler
 class ConvolutionWorker(QObject):
     progress_updated = pyqtSignal(int)
     result_ready = pyqtSignal(np.ndarray)
