@@ -28,6 +28,7 @@ class PSFGenerator:
         psf = amplitude * bessel * interference
         psf = np.abs(psf)  # 取绝对值保证非负
         psf /= psf.max()  # 归一化到[0,1]
+        # psf = psf / psf.sum() #再均分强度
         return psf.astype(np.float32)
 
     @staticmethod
@@ -44,7 +45,8 @@ class PSFGenerator:
         sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))  # FWHM = 2.355σ
         psf = np.exp(-r ** 2 / (2 * sigma ** 2))
         psf = np.abs(psf)  # 取绝对值保证非负
-        psf /= psf.max()  # 归一化到[0,1]
+        # psf /= psf.max()  # 归一化到[0,1]
+        # psf = psf / psf.sum()  # 再均分强度
         return psf.astype(np.float32)
 
     @staticmethod

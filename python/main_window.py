@@ -465,7 +465,7 @@ class MainWindow(QMainWindow):
         self.figure.clear()
         ax = self.figure.add_subplot(111)
         image = ax.imshow(result,
-                  cmap='viridis',
+                  cmap='viridis', #inferno
                   vmin=0,
                   vmax=1,
                   )
